@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Seller Geo Logger</title>
+  </head>
+  <body>
+    <h2>📍 Seller Location Logger</h2>
+    <p>Click the button to log your location.</p>
+    <button onclick="captureLocation()">Log Location</button>
+    <p id="status"></p>
+
+    <script>
+      function captureLocation() {
+        const status = document.getElementById('status');
+
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            pos => {
+              const lat = pos.coords.latitude;
+              const lon = pos.coords.longitude;
+              const acc = pos.coords.accuracy;
+
+              status.textContent = `Logging: Lat=${lat}, Lon=${lon}, Accuracy=${acc}m`;
+
+              google.script.run
+                .withSuccessHandler(res => {
+                  if (res.status === 'saved') {
+                    status.textContent = '✅ Saved to sheet.';
+                  } else {
+                    status.textContent = '⚠️ Skipped: ' + res.reason;
+                  }
+                })
+                .withFailureHandler(err => {
+                  status.textContent = '❌ Error: ' + err.message;
+                })
+                .logCoords({ lat, lon, acc });
+            },
+            err => { status.textContent = '❌ Error: ' + err.message; },
+            { enableHighAccuracy: true }
+          );
+        } else {
+          status.textContent = 'Geolocation not supported.';
+        }
+      }
+    </script>
+  </body>
+</html>
